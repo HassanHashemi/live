@@ -50,18 +50,26 @@ namespace Live.Hub
 
             LogConnection(clientInfo);
 
+            Exception thrownException = null;
+
             try
             {
-                await this.Read(clientInfo, socket);
+                await Read(clientInfo, socket);
             }
             catch (Exception ex)
             {
-                _clients.TryRemove(clientInfo, out var _);
+                thrownException = ex;
                 _logger.LogError(ex.Message);
-
+            }
+            finally
+            {
                 LogDisconnect(clientInfo);
+                RemoveConnection(clientInfo, socket);
+            }
 
-                throw;
+            if (thrownException != null)
+            {
+                throw thrownException;
             }
         }
 
@@ -70,6 +78,14 @@ namespace Live.Hub
             if (!_clients.TryGetValue(client, out var connections))
             {
                 return;
+            }
+
+            connections.Remove(socket);
+
+            // no connection left for this user
+            if (connections.Count == 0)
+            {
+                _clients.TryRemove(client, out var _);
             }
         }
 
