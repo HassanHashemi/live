@@ -1,7 +1,7 @@
-using System;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
+using System;
 
 namespace Live.Hub
 {
@@ -19,7 +19,7 @@ namespace Live.Hub
                 KeepAliveInterval = TimeSpan.FromSeconds(10)
             });
 
-            app.UseMiddleware<SatrapSocketServerMiddleware>();
+            app.UseMiddleware<WebSocketSocketMiddleware>();
         }
     }
 }

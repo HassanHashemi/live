@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace Live.Hub
 {
@@ -18,15 +17,12 @@ namespace Live.Hub
                 throw new ArgumentNullException(nameof(userId));
             }
 
-            Complition = new TaskCompletionSource<object>();
-
             UserId = userId;
             MerchantId = merchantId;
             CancellationToken = cancellationToken;
         }
 
         public string UserId { get; }
-        public TaskCompletionSource<object> Complition { get; } = new TaskCompletionSource<object>();
         public string MerchantId { get; }
         public CancellationToken CancellationToken { get; }
     }

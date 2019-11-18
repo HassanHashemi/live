@@ -22,7 +22,7 @@ namespace Live.Hub
         public event EventHandler<MessageReceivedArgs<string>> JsonReceived;
         public event EventHandler<MessageReceivedArgs<byte[]>> BinaryReceived;
 
-        public async void Process(ClientInfo clientInfo, WebSocket socket)
+        public async Task Process(ClientInfo clientInfo, WebSocket socket)
         {
             if (clientInfo == null)
             {
@@ -53,17 +53,15 @@ namespace Live.Hub
             try
             {
                 await this.Read(clientInfo, socket);
-                clientInfo.Complition.SetResult(null);
             }
             catch (Exception ex)
             {
-                clientInfo.Complition.SetException(ex);
-            }
-            finally
-            {
                 _clients.TryRemove(clientInfo, out var _);
+                _logger.LogError(ex.Message);
 
                 LogDisconnect(clientInfo);
+
+                throw;
             }
         }
 
@@ -83,6 +81,7 @@ namespace Live.Hub
                     if (data.Type == InternalWebsocketMessageType.Close)
                     {
                         await client.CloseAsync(WebSocketCloseStatus.NormalClosure, string.Empty, CancellationToken.None);
+                        break;
                     }
 
                     this.RaiseEvents(clientInfo, data);

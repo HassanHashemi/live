@@ -5,12 +5,12 @@ using System.Threading.Tasks;
 
 namespace Live.Hub
 {
-    public class SatrapSocketServerMiddleware
+    public class WebSocketSocketMiddleware
     {
         private readonly SocketCollection _socketCollection;
-        private readonly ILogger<SatrapSocketServerMiddleware> _logger;
+        private readonly ILogger<WebSocketSocketMiddleware> _logger;
 
-        public SatrapSocketServerMiddleware(SocketCollection socketCollection, ILogger<SatrapSocketServerMiddleware> logger)
+        public WebSocketSocketMiddleware(SocketCollection socketCollection, ILogger<WebSocketSocketMiddleware> logger)
         {
             this._socketCollection = socketCollection;
             _logger = logger;
@@ -44,13 +44,11 @@ namespace Live.Hub
             }
 
             var socket = await httpContext.WebSockets.AcceptWebSocketAsync();
-
             var clientInfo = new ClientInfo(merchantId, userId, httpContext.RequestAborted);
-            _socketCollection.Process(clientInfo, socket);
 
             try
             {
-                await clientInfo.Complition.Task;
+                await _socketCollection.Process(clientInfo, socket);
             }
             catch (Exception)
             {
