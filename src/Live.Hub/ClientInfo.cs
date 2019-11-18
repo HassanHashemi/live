@@ -18,17 +18,15 @@ namespace Live.Hub
                 throw new ArgumentNullException(nameof(userId));
             }
 
-            _tcs = new TaskCompletionSource<object>();
+            Complition = new TaskCompletionSource<object>();
 
             UserId = userId;
             MerchantId = merchantId;
             CancellationToken = cancellationToken;
         }
 
-        private readonly TaskCompletionSource<object> _tcs = new TaskCompletionSource<object>();
-
         public string UserId { get; }
-        public TaskCompletionSource<object> Complition => _tcs;
+        public TaskCompletionSource<object> Complition { get; } = new TaskCompletionSource<object>();
         public string MerchantId { get; }
         public CancellationToken CancellationToken { get; }
     }
