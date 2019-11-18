@@ -65,6 +65,14 @@ namespace Live.Hub
             }
         }
 
+        private void RemoveConnection(ClientInfo client, WebSocket socket)
+        {
+            if (!_clients.TryGetValue(client, out var connections))
+            {
+                return;
+            }
+        }
+
         private async Task Read(ClientInfo clientInfo, WebSocket client)
         {
             while (client.State == WebSocketState.Open)

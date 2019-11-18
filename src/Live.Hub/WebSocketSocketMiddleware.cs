@@ -13,7 +13,7 @@ namespace Live.Hub
         public WebSocketSocketMiddleware(SocketCollection socketCollection, ILogger<WebSocketSocketMiddleware> logger)
         {
             this._socketCollection = socketCollection;
-            _logger = logger;
+            this._logger = logger;
         }
 
         public async Task InvokeAsync(HttpContext httpContext)
