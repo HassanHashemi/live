@@ -6,7 +6,7 @@ namespace Live.Hub
 {
     public class ClientInfo
     {
-        public ClientInfo(string merchantId, string userId, TaskCompletionSource<object> tcs, CancellationToken cancellationToken = default)
+        public ClientInfo(string merchantId, string userId, CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrEmpty(merchantId))
             {
@@ -18,14 +18,17 @@ namespace Live.Hub
                 throw new ArgumentNullException(nameof(userId));
             }
 
+            _tcs = new TaskCompletionSource<object>();
+
             UserId = userId;
-            Complition = tcs;
             MerchantId = merchantId;
             CancellationToken = cancellationToken;
         }
 
+        private readonly TaskCompletionSource<object> _tcs = new TaskCompletionSource<object>();
+
         public string UserId { get; }
-        public TaskCompletionSource<object> Complition { get; }
+        public TaskCompletionSource<object> Complition => _tcs;
         public string MerchantId { get; }
         public CancellationToken CancellationToken { get; }
     }

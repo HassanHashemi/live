@@ -11,16 +11,9 @@ namespace Live.Hub
     {
         public const int READ_TIME_OUT = 3000;
 
-        public static async Task<WebSocketMessage> Read(WebSocket socket)
+        public static Task<WebSocketMessage> Read(WebSocket socket)
         {
-            try
-            {
-                return await ReadInternal(socket);
-            }
-            catch (WebSocketException ex) when (ex.WebSocketErrorCode == WebSocketError.ConnectionClosedPrematurely)
-            {
-                return WebSocketMessage.Close;
-            }
+            return ReadInternal(socket);
         }
 
         private static async Task<WebSocketMessage> ReadInternal(WebSocket socket)

@@ -19,7 +19,7 @@ namespace Live.Hub
                 KeepAliveInterval = TimeSpan.FromSeconds(10)
             });
 
-            app.UseMiddleware<SatrapSocketServer>();
+            app.UseMiddleware<SatrapSocketServerMiddleware>();
         }
     }
 }

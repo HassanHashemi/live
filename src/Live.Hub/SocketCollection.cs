@@ -54,6 +54,10 @@ namespace Live.Hub
             {
                 await this.Read(clientInfo, socket);
             }
+            catch (Exception ex)
+            {
+                clientInfo.Complition.SetException(ex);
+            }
             finally
             {
                 clientInfo.Complition.SetResult(null);
