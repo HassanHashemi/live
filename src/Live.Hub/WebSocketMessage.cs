@@ -3,7 +3,7 @@ using System.Text;
 
 namespace Live.Hub
 {
-    public class WebSocketMessage
+    public sealed class WebSocketMessage
     {
         private WebSocketMessage()
         {
@@ -12,19 +12,24 @@ namespace Live.Hub
         public InternalWebsocketMessageType Type { get; set; }
         public object Data { get; set; }
 
-        public byte[] ReadBinary()
+        public byte[] ToBinary()
         {
-            throw new NotImplementedException();
+            if (!(this.Data is byte[]))
+            {
+                throw new InvalidOperationException("Data should be byte[]");
+            }
+
+            return this.Data as byte[];
         }
 
-        public T ReadObject<T>()
+        public string ToJson()
         {
-            throw new NotImplementedException();
-        }
+            if (!(this.Data is string json))
+            {
+                throw new InvalidOperationException("Data should be string");
+            }
 
-        public string ReadJson()
-        {
-            throw new NotImplementedException();
+            return json;
         }
 
         public static WebSocketMessage Close => new WebSocketMessage { Type = InternalWebsocketMessageType.Close };

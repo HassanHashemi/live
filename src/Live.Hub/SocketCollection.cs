@@ -93,7 +93,7 @@ namespace Live.Hub
                 this.OnBinaryReceived(new MessageReceivedArgs<byte[]>
                 {
                     Client = client,
-                    Message = message.ReadBinary()
+                    Message = message.ToBinary()
                 });
             }
             else if (message.Type == InternalWebsocketMessageType.Json)
@@ -101,7 +101,7 @@ namespace Live.Hub
                 this.OnJsonReceived(new MessageReceivedArgs<string>
                 {
                     Client = client,
-                    Message = message.ReadJson()
+                    Message = message.ToJson()
                 });
             }
 
