@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
 using System;
-using System.Buffers;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Net.WebSockets;
@@ -9,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Live.Hub
 {
-    public sealed class SocketCollection
+    public class SocketCollection
     {
         private readonly ConcurrentDictionary<ClientInfo, List<WebSocket>> _clients;
         private readonly ILogger<SocketCollection> _logger;
@@ -19,6 +18,9 @@ namespace Live.Hub
             this._clients = new ConcurrentDictionary<ClientInfo, List<WebSocket>>();
             this._logger = logger;
         }
+
+        public event EventHandler<MessageReceivedArgs<string>> JsonReceived;
+        public event EventHandler<MessageReceivedArgs<byte[]>> BinaryReceived;
 
         public async void Process(ClientInfo clientInfo, WebSocket socket)
         {
@@ -63,24 +65,61 @@ namespace Live.Hub
 
         private async Task Read(ClientInfo clientInfo, WebSocket client)
         {
-            var buffer = ArrayPool<byte>.Shared.Rent(4 * 1024);
-
             while (client.State == WebSocketState.Open)
             {
                 while (!clientInfo.CancellationToken.IsCancellationRequested)
                 {
-                    using var cts = new CancellationTokenSource();
-                    cts.CancelAfter(3000);
+                    var data = await WebSocketMessageReader.Read(client);
 
-                    var result = await client.ReceiveAsync(new ArraySegment<byte>(buffer), cts.Token);
+                    if (data.Type == InternalWebsocketMessageType.Hearbeat)
+                    {
+                        continue;
+                    }
 
-                    while (!result.CloseStatus.HasValue)
+                    if (data.Type == InternalWebsocketMessageType.Close)
                     {
                         await client.CloseAsync(WebSocketCloseStatus.NormalClosure, string.Empty, CancellationToken.None);
-                        break;
                     }
+
+                    this.RaiseEvents(clientInfo, data);
                 }
             }
+        }
+
+        private void RaiseEvents(ClientInfo client, WebSocketMessage message)
+        {
+            if (message.Type == InternalWebsocketMessageType.Binary)
+            {
+                this.OnBinaryReceived(new MessageReceivedArgs<byte[]>
+                {
+                    Client = client,
+                    Message = message.ReadBinary()
+                });
+            }
+            else if (message.Type == InternalWebsocketMessageType.Json)
+            {
+                this.OnJsonReceived(new MessageReceivedArgs<string>
+                {
+                    Client = client,
+                    Message = message.ReadJson()
+                });
+            }
+
+            throw new InvalidOperationException("Invlaid message type");
+        }
+
+        protected virtual void OnJsonReceived(MessageReceivedArgs<string> e)
+        {
+            var handler = this.JsonReceived;
+
+            handler?.Invoke(this, e);
+        }
+
+        protected virtual void OnBinaryReceived(MessageReceivedArgs<byte[]> e)
+        {
+            var handler = this.BinaryReceived;
+
+            handler?.Invoke(this, e);
         }
 
         private void LogConnection(ClientInfo clientInfo)
