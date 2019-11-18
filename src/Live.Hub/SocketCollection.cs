@@ -53,6 +53,7 @@ namespace Live.Hub
             try
             {
                 await this.Read(clientInfo, socket);
+                clientInfo.Complition.SetResult(null);
             }
             catch (Exception ex)
             {
@@ -60,7 +61,6 @@ namespace Live.Hub
             }
             finally
             {
-                clientInfo.Complition.SetResult(null);
                 _clients.TryRemove(clientInfo, out var _);
 
                 LogDisconnect(clientInfo);
