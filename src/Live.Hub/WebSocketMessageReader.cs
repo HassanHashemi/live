@@ -9,7 +9,7 @@ namespace Live.Hub
 {
     public static class WebSocketMessageReader
     {
-        public const int READ_TIME_OUT = 3000;
+        public const int READ_TIME_OUT = 5000;
 
         public static Task<WebSocketMessage> Read(WebSocket socket)
         {
@@ -23,22 +23,22 @@ namespace Live.Hub
             using var cts = new CancellationTokenSource();
             cts.CancelAfter(READ_TIME_OUT);
 
-            var result = await socket.ReceiveAsync(arraySegment, cts.Token);
-
-            if (result.CloseStatus.HasValue)
-            {
-                return WebSocketMessage.Close;
-            }
+            WebSocketReceiveResult result = null;
 
             using var stream = new MemoryStream();
 
-            stream.Write(buffer, 0, result.Count);
-
-            while (!result.EndOfMessage)
+            do
             {
                 result = await socket.ReceiveAsync(arraySegment, cts.Token);
+
+                if (result.CloseStatus.HasValue)
+                {
+                    return WebSocketMessage.Close;
+                }
+
                 stream.Write(buffer, 0, result.Count);
-            }
+
+            } while (!result.EndOfMessage);
 
             return ParseData(result, stream.ToArray());
         }

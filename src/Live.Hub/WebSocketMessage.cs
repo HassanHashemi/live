@@ -14,12 +14,12 @@ namespace Live.Hub
 
         public byte[] ToBinary()
         {
-            if (!(this.Data is byte[]))
+            if (!(this.Data is byte[] bytes))
             {
                 throw new InvalidOperationException("Data should be byte[]");
             }
 
-            return this.Data as byte[];
+            return bytes;
         }
 
         public string ToJson()
