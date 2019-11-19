@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Live.Backplane
@@ -7,7 +8,7 @@ namespace Live.Backplane
     {
         public event EventHandler<BackplaneMessageReceivedArgs> MessageReceived;
 
-        public Task Publish(BackplaneMessage message)
+        public Task Publish(BackplaneMessage message, CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
         }

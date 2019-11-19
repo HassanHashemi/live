@@ -10,6 +10,18 @@ namespace Live.Hub
         private readonly Dictionary<ClientInfo, List<WebSocket>> _clients
             = new Dictionary<ClientInfo, List<WebSocket>>();
 
+        public IEnumerable<WebSocket> GetConnections(string userId)
+        {
+            if (string.IsNullOrEmpty(userId))
+            {
+                throw new ArgumentNullException(nameof(userId));
+            }
+
+            return _clients
+                .Where(c => c.Key.UserId == userId)
+                .SelectMany(kvp => kvp.Value);
+        }
+
         public void Remove(ClientInfo client, WebSocket connection)
         {
             if (client == null)

@@ -1,6 +1,8 @@
 ﻿using Microsoft.Extensions.Logging;
 using System;
 using System.Net.WebSockets;
+using System.Text;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -12,6 +14,8 @@ namespace Live.Hub
 
         private readonly SocketCollection _clients;
         private readonly ILogger<SocketServer> _logger;
+
+        public unsafe char* JsonConvert { get; private set; }
 
         public SocketServer(ILogger<SocketServer> logger)
         {
@@ -63,6 +67,18 @@ namespace Live.Hub
             {
                 throw thrownException;
             }
+        }
+
+        public async Task SendJson(string userId, object message)
+        {
+            var sockets = this._clients.GetConnections(userId);
+            var bytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message));
+        }
+
+        private async Task SendBytes(WebSocket socket, byte[] data)
+        {
+            var segment = new ArraySegment<byte>(data);
+            socket.SendAsync(segment, WebSocketMessageType.Text, true
         }
 
         private void Disconnect(ClientInfo clientInfo, WebSocket socket)

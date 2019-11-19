@@ -2,9 +2,8 @@
 
 namespace Live.Hub
 {
-    public class MessageReceivedArgs<T> : EventArgs
+    public class ClientConnectedEventArgs : EventArgs
     {
         public ClientInfo Client { get; set; }
-        public T Message { get; set; }
     }
 }
