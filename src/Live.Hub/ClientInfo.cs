@@ -1,11 +1,10 @@
 ﻿using System;
-using System.Threading;
 
 namespace Live.Hub
 {
     public class ClientInfo
     {
-        public ClientInfo(string merchantId, string userId, CancellationToken cancellationToken = default)
+        public ClientInfo(string merchantId, string userId)
         {
             if (string.IsNullOrEmpty(merchantId))
             {
@@ -19,11 +18,34 @@ namespace Live.Hub
 
             UserId = userId;
             MerchantId = merchantId;
-            CancellationToken = cancellationToken;
         }
 
         public string UserId { get; }
         public string MerchantId { get; }
-        public CancellationToken CancellationToken { get; }
+
+        public override bool Equals(object obj)
+        {
+            if (!(obj is ClientInfo other))
+            {
+                return false;
+            }
+
+            return this == other;
+        }
+
+        public override int GetHashCode()
+        {
+            return string.Concat(MerchantId, UserId).GetHashCode();
+        }
+
+        public static bool operator ==(ClientInfo left, ClientInfo right)
+        {
+            return left.MerchantId == right.MerchantId && left.UserId == right.UserId;
+        }
+
+        public static bool operator !=(ClientInfo left, ClientInfo right)
+        {
+            return left.MerchantId != right.MerchantId || left.UserId != right.UserId;
+        }
     }
 }

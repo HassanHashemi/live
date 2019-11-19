@@ -7,10 +7,10 @@ namespace Live.Hub
 {
     public class WebSocketSocketMiddleware
     {
-        private readonly SocketCollection _socketCollection;
+        private readonly SocketServer _socketCollection;
         private readonly ILogger<WebSocketSocketMiddleware> _logger;
 
-        public WebSocketSocketMiddleware(SocketCollection socketCollection, ILogger<WebSocketSocketMiddleware> logger)
+        public WebSocketSocketMiddleware(SocketServer socketCollection, ILogger<WebSocketSocketMiddleware> logger)
         {
             this._socketCollection = socketCollection;
             this._logger = logger;
@@ -44,15 +44,15 @@ namespace Live.Hub
             }
 
             var socket = await httpContext.WebSockets.AcceptWebSocketAsync();
-            var clientInfo = new ClientInfo(merchantId, userId, httpContext.RequestAborted);
+            var clientInfo = new ClientInfo(merchantId, userId);
 
             try
             {
-                await _socketCollection.Process(clientInfo, socket);
+                await _socketCollection.Process(clientInfo, socket, httpContext.RequestAborted);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                _logger.LogInformation("client disconnected");
+                _logger.LogInformation(ex.Message);
             }
         }
     }

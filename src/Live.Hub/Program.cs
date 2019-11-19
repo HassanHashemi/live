@@ -14,6 +14,18 @@ namespace Live.Hub
             Host.CreateDefaultBuilder(args)
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
+                    webBuilder.UseKestrel((o, c) =>
+                    {
+                        if (o.HostingEnvironment.IsDevelopment())
+                        {
+                            c.ListenAnyIP(5000);
+                        }
+                        else
+                        {
+                            c.ListenAnyIP(80);
+                        }
+                    });
+
                     webBuilder.UseStartup<Startup>();
                 });
     }

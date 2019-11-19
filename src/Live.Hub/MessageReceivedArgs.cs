@@ -1,14 +1,16 @@
-﻿using Microsoft.Extensions.Logging;
-using System;
-using System.Buffers;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Net.WebSockets;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using System;
 
 namespace Live.Hub
 {
+    public class ClientConnectedEventArgs : EventArgs
+    {
+        public ClientInfo Client { get; set; }
+    }
+
+    public class ClientDisconnectedEventArgs : EventArgs
+    {
+        public ClientInfo Client { get; set; }
+    }
 
     public class MessageReceivedArgs<T> : EventArgs
     {

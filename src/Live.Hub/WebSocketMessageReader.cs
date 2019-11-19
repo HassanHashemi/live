@@ -10,6 +10,7 @@ namespace Live.Hub
     public static class WebSocketMessageReader
     {
         public const int READ_TIME_OUT = 5000;
+        public const int BUFFER_SIZE = 4 * 1024;
 
         public static Task<WebSocketMessage> Read(WebSocket socket)
         {
@@ -18,7 +19,7 @@ namespace Live.Hub
 
         private static async Task<WebSocketMessage> ReadInternal(WebSocket socket)
         {
-            var buffer = ArrayPool<byte>.Shared.Rent(4 * 1024);
+            var buffer = ArrayPool<byte>.Shared.Rent(SocketServer.BUFFER_SIZE);
             var arraySegment = new ArraySegment<byte>(buffer);
             using var cts = new CancellationTokenSource();
             cts.CancelAfter(READ_TIME_OUT);
