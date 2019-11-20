@@ -5,5 +5,6 @@ namespace Live.Hub
     public class ClientConnectedEventArgs : EventArgs
     {
         public ClientInfo Client { get; set; }
+        public bool Cancel { get; set; }
     }
 }

@@ -8,14 +8,11 @@ namespace Live.Hub
     {
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddHostedService<TestService>();
-            services.AddSingleton<SocketServer>();
-            services.AddScoped<WebSocketSocketMiddleware>();
+            services.AddSocketServer();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            app.UseExceptionHandler();
             app.UseWebsocketsInternal(env);
         }
     }

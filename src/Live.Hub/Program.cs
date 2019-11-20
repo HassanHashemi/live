@@ -22,7 +22,7 @@ namespace Live.Hub
                 {
                     if (o.HostingEnvironment.IsDevelopment())
                     {
-                        c.ListenAnyIP(5000);
+                        c.ListenLocalhost(5000);
                     }
                     else
                     {

@@ -4,13 +4,18 @@ using System.Threading.Tasks;
 
 namespace Live.Backplane
 {
-    public class RedisBackplane : IBackplane
+    public class RedisBackplaine : IBackplaine
     {
         public event EventHandler<BackplaneMessageReceivedArgs> MessageReceived;
 
+        public Task Connect()
+        {
+            return Task.CompletedTask;
+        }
+
         public Task Publish(BackplaneMessage message, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            return Task.CompletedTask;
         }
     }
 }

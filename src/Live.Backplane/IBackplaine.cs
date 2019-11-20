@@ -4,9 +4,9 @@ using System.Threading.Tasks;
 
 namespace Live.Backplane
 {
-    public interface IBackplane
+    public interface IBackplaine
     {
-        Task Publish(BackplaneMessage message) => Publish(message, default);
+        Task Connect();
         Task Publish(BackplaneMessage message, CancellationToken cancellationToken);
         event EventHandler<BackplaneMessageReceivedArgs> MessageReceived;
     }

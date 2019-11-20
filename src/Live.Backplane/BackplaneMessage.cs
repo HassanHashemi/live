@@ -4,11 +4,16 @@ namespace Live.Backplane
 {
     public class BackplaneMessage
     {
-        public BackplaneMessage(string clientId, object message)
+        public BackplaneMessage(string userId, string merchantId, object message)
         {
-            if (string.IsNullOrEmpty(clientId))
+            if (string.IsNullOrEmpty(userId))
             {
-                throw new ArgumentNullException(nameof(clientId));
+                throw new ArgumentNullException(nameof(userId));
+            }
+
+            if (string.IsNullOrEmpty(merchantId))
+            {
+                throw new ArgumentException(nameof(merchantId));
             }
 
             if (message == null)
@@ -16,11 +21,12 @@ namespace Live.Backplane
                 throw new ArgumentNullException(nameof(message));
             }
 
-            this.ClientId = clientId;
+            this.UserId = userId;
             this.Message = message;
         }
 
-        public string ClientId { get; private set; }
+        public string MerchantId { get; set; }
+        public string UserId { get; private set; }
         public object Message { get; private set; }
     }
 }

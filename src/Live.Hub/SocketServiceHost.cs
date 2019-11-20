@@ -1,34 +1,51 @@
-﻿using Microsoft.Extensions.Hosting;
+﻿using Live.Backplane;
 using Microsoft.Extensions.Logging;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Live.Hub
 {
-    public class TestService : IHostedService
+    public class SocketServiceHost : Microsoft.Extensions.Hosting.IHostedService
     {
         private readonly SocketServer _socketServer;
-        private readonly ILogger<TestService> _logger;
-        private Timer _pushTimer;
+        private readonly IBackplaine _backplane;
+        private readonly ILogger<SocketServiceHost> _logger;
 
-        public TestService(SocketServer socketServer, ILogger<TestService> logger)
+        public SocketServiceHost(SocketServer socketServer, IBackplaine backplane, ILogger<SocketServiceHost> logger)
         {
             _socketServer = socketServer;
+            _backplane = backplane;
             _logger = logger;
         }
 
-        public Task StartAsync(CancellationToken cancellationToken)
+        public async Task StartAsync(CancellationToken cancellationToken)
         {
             _socketServer.ClientConnected += SocketServer_ClientConnected;
             _socketServer.JsonReceived += SocketServer_JsonReceived;
             _socketServer.ClientDisconnected += SocketServer_ClientDisconnected;
             _socketServer.ClientHeartBeat += SocketServer_ClientHeartBeat;
-            _pushTimer = new Timer(async o =>
-            {
-                await _socketServer.SendJson("38", new { msg = "Hellow??" });
-            }, null, 0, 3000);
 
-            return Task.CompletedTask;
+            _backplane.MessageReceived += Backplane_MessageReceived;
+
+            await _backplane.Connect();
+        }
+
+        private async void Backplane_MessageReceived(object sender, BackplaneMessageReceivedArgs e)
+        {
+            try
+            {
+                using var cts = new CancellationTokenSource();
+                cts.CancelAfter(3000);
+
+                await _socketServer.SendJson(e.Message.UserId,
+                    e.Message.Message,
+                    cts.Token);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error pushing to {e.Message.UserId}, info: {ex.Message}");
+            }
         }
 
         public Task StopAsync(CancellationToken cancellationToken)
@@ -61,8 +78,13 @@ namespace Live.Hub
             }
         }
 
-        private void SocketServer_JsonReceived(object sender, MessageReceivedArgs<string> e)
+        private async void SocketServer_JsonReceived(object sender, MessageReceivedArgs<string> e)
         {
+            foreach (var item in _socketServer.ConnectedClients)
+            {
+                await _socketServer.SendJson(item.Key.UserId, new { msg = $"{e.Message} {e.Client.UserId}" });
+            }
+
             _logger.LogInformation($"Received {e.Message} from {e.Client.UserId}");
         }
     }

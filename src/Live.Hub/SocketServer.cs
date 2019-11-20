@@ -116,7 +116,6 @@ namespace Live.Hub
             OnClientConnected(new ClientConnectedEventArgs { Client = clientInfo });
 
             ConnectedClients.AddConnection(clientInfo, socket);
-
             LogConnection(clientInfo);
         }
 
