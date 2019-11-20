@@ -12,14 +12,11 @@ namespace Live.Hub
     {
         public const int BUFFER_SIZE = 4 * 1024;
 
-        private readonly SocketCollection _clients;
         private readonly ILogger<SocketServer> _logger;
-
-        public unsafe char* JsonConvert { get; private set; }
 
         public SocketServer(ILogger<SocketServer> logger)
         {
-            _clients = new SocketCollection();
+            ConnectedClients = new SocketCollection();
             _logger = logger;
         }
 
@@ -27,6 +24,10 @@ namespace Live.Hub
         public event EventHandler<MessageReceivedArgs<byte[]>> BinaryReceived;
         public event EventHandler<ClientConnectedEventArgs> ClientConnected;
         public event EventHandler<ClientDisconnectedEventArgs> ClientDisconnected;
+        public event EventHandler<ErrorEventArgs> ClientError;
+        public event EventHandler<HeartBeatEventArgs> ClientHeartBeat;
+
+        public SocketCollection ConnectedClients { get; private set; }
 
         public async Task Process(ClientInfo clientInfo, WebSocket socket, CancellationToken requestAborted)
         {
@@ -47,46 +48,66 @@ namespace Live.Hub
 
             Connect(clientInfo, socket);
 
-            Exception thrownException = null;
-
             try
             {
                 await Read(clientInfo, socket, requestAborted);
             }
             catch (Exception ex)
             {
-                thrownException = ex;
-                _logger.LogError(ex.Message);
+                OnClientError(new ErrorEventArgs { Client = clientInfo, Exception = ex });
             }
             finally
             {
                 Disconnect(clientInfo, socket);
             }
+        }
 
-            if (thrownException != null)
+        protected virtual void OnClientError(ErrorEventArgs e)
+        {
+            var handlers = ClientError;
+            handlers?.Invoke(this, e);
+
+            _logger.LogError(e.Exception.Message);
+        }
+
+        public async Task SendJson(string userId, object message, CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrEmpty(userId))
             {
-                throw thrownException;
+                throw new ArgumentNullException(nameof(userId));
+            }
+
+            if (message == null)
+            {
+                throw new ArgumentNullException(nameof(message));
+            }
+
+            if (message.GetType().IsPrimitive)
+            {
+                throw new ArgumentException("Privmitive types are not supported");
+            }
+
+            var sockets = this.ConnectedClients.GetConnections(userId);
+            var bytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message));
+
+            foreach (var connection in sockets)
+            {
+                await this.SendBytes(connection, bytes, WebSocketMessageType.Text, cancellationToken);
             }
         }
 
-        public async Task SendJson(string userId, object message)
+        private Task SendBytes(WebSocket socket, byte[] data, WebSocketMessageType type, CancellationToken cancellationToken)
         {
-            var sockets = this._clients.GetConnections(userId);
-            var bytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message));
-        }
+            var dataToSend = new ArraySegment<byte>(data, 0, data.Length);
 
-        private async Task SendBytes(WebSocket socket, byte[] data)
-        {
-            var segment = new ArraySegment<byte>(data);
-            socket.SendAsync(segment, WebSocketMessageType.Text, true
+            return socket.SendAsync(dataToSend, type, true, cancellationToken);
         }
 
         private void Disconnect(ClientInfo clientInfo, WebSocket socket)
         {
             OnClientDisconnect(new ClientDisconnectedEventArgs { Client = clientInfo });
 
-            _clients.Remove(clientInfo, socket);
-
+            ConnectedClients.Remove(clientInfo, socket);
             LogDisconnect(clientInfo);
         }
 
@@ -94,7 +115,7 @@ namespace Live.Hub
         {
             OnClientConnected(new ClientConnectedEventArgs { Client = clientInfo });
 
-            _clients.AddConnection(clientInfo, socket);
+            ConnectedClients.AddConnection(clientInfo, socket);
 
             LogConnection(clientInfo);
         }
@@ -111,8 +132,10 @@ namespace Live.Hub
             handlers?.Invoke(this, e);
         }
 
-        private async Task Read(ClientInfo clientInfo, WebSocket client, CancellationToken requestAborted)
+        private async Task<WebSocketCloseStatus?> Read(ClientInfo clientInfo, WebSocket client, CancellationToken requestAborted)
         {
+            WebSocketCloseStatus? closeStatus = null;
+
             while (client.State == WebSocketState.Open)
             {
                 while (!requestAborted.IsCancellationRequested)
@@ -121,21 +144,31 @@ namespace Live.Hub
 
                     if (data.Type == InternalWebsocketMessageType.Hearbeat)
                     {
+                        this.OnHeartBeat(new HeartBeatEventArgs { Client = clientInfo });
                         continue;
                     }
 
                     if (data.Type == InternalWebsocketMessageType.Close)
                     {
+                        closeStatus = data.CloseStatus.Value;
                         await client.CloseAsync(WebSocketCloseStatus.NormalClosure, string.Empty, CancellationToken.None);
                         break;
                     }
 
-                    this.RaiseEvents(clientInfo, data);
+                    this.RaiseMessageEvents(clientInfo, data);
                 }
             }
+
+            return closeStatus;
         }
 
-        private void RaiseEvents(ClientInfo client, WebSocketMessage message)
+        protected virtual void OnHeartBeat(HeartBeatEventArgs e)
+        {
+            var handlers = this.ClientHeartBeat;
+            handlers?.Invoke(this, e);
+        }
+
+        private void RaiseMessageEvents(ClientInfo client, WebSocketMessage message)
         {
             if (message.Type == InternalWebsocketMessageType.Binary)
             {
@@ -153,8 +186,10 @@ namespace Live.Hub
                     Message = message.ToJson()
                 });
             }
-
-            throw new InvalidOperationException("Invlaid message type");
+            else
+            {
+                throw new InvalidOperationException("Invlaid message type");
+            }
         }
 
         protected virtual void OnJsonReceived(MessageReceivedArgs<string> e)

@@ -1,5 +1,7 @@
+using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace Live.Hub
 {
@@ -10,23 +12,22 @@ namespace Live.Hub
             CreateHostBuilder(args).Build().Run();
         }
 
-        public static IHostBuilder CreateHostBuilder(string[] args) =>
-            Host.CreateDefaultBuilder(args)
-                .ConfigureWebHostDefaults(webBuilder =>
+        public static IWebHostBuilder CreateHostBuilder(string[] args) =>
+            WebHost.CreateDefaultBuilder<Startup>(args)
+                .ConfigureLogging((o, c) =>
                 {
-                    webBuilder.UseKestrel((o, c) =>
+                    c.AddConsole();
+                })
+                .ConfigureKestrel((o, c) =>
+                {
+                    if (o.HostingEnvironment.IsDevelopment())
                     {
-                        if (o.HostingEnvironment.IsDevelopment())
-                        {
-                            c.ListenAnyIP(5000);
-                        }
-                        else
-                        {
-                            c.ListenAnyIP(80);
-                        }
-                    });
-
-                    webBuilder.UseStartup<Startup>();
+                        c.ListenAnyIP(5000);
+                    }
+                    else
+                    {
+                        c.ListenAnyIP(80);
+                    }
                 });
     }
 }

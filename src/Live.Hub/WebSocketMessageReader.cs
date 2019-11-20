@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Buffers;
 using System.IO;
 using System.Net.WebSockets;
 using System.Threading;
@@ -19,8 +18,8 @@ namespace Live.Hub
 
         private static async Task<WebSocketMessage> ReadInternal(WebSocket socket)
         {
-            var buffer = ArrayPool<byte>.Shared.Rent(SocketServer.BUFFER_SIZE);
-            var arraySegment = new ArraySegment<byte>(buffer);
+            var buffer = WebSocket.CreateClientBuffer(BUFFER_SIZE, BUFFER_SIZE);
+
             using var cts = new CancellationTokenSource();
             cts.CancelAfter(READ_TIME_OUT);
 
@@ -30,14 +29,14 @@ namespace Live.Hub
 
             do
             {
-                result = await socket.ReceiveAsync(arraySegment, cts.Token);
+                result = await socket.ReceiveAsync(buffer, cts.Token);
 
                 if (result.CloseStatus.HasValue)
                 {
-                    return WebSocketMessage.Close;
+                    return WebSocketMessage.Close((WebSocketCloseStatus)result.CloseStatus);
                 }
 
-                stream.Write(buffer, 0, result.Count);
+                stream.Write(buffer.Array, 0, result.Count);
 
             } while (!result.EndOfMessage);
 

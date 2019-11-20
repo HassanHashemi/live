@@ -1,11 +1,12 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.WebSockets;
 
 namespace Live.Hub
 {
-    internal sealed class SocketCollection
+    public sealed class SocketCollection : IEnumerable<KeyValuePair<ClientInfo, List<WebSocket>>>
     {
         private readonly Dictionary<ClientInfo, List<WebSocket>> _clients
             = new Dictionary<ClientInfo, List<WebSocket>>();
@@ -19,7 +20,8 @@ namespace Live.Hub
 
             return _clients
                 .Where(c => c.Key.UserId == userId)
-                .SelectMany(kvp => kvp.Value);
+                .SelectMany(kvp => kvp.Value)
+                .Where(s => s.State == WebSocketState.Open);
         }
 
         public void Remove(ClientInfo client, WebSocket connection)
@@ -73,6 +75,19 @@ namespace Live.Hub
             {
                 current.Value.Add(connection);
             }
+        }
+
+        public IEnumerator<KeyValuePair<ClientInfo, List<WebSocket>>> GetEnumerator()
+        {
+            foreach (var item in _clients)
+            {
+                yield return item;
+            }
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return this.GetEnumerator();
         }
     }
 }

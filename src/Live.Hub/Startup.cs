@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
-using System;
 
 namespace Live.Hub
 {
@@ -9,18 +8,15 @@ namespace Live.Hub
     {
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddHostedService<TestService>();
             services.AddSingleton<SocketServer>();
+            services.AddScoped<WebSocketSocketMiddleware>();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            app.UseWebSockets(new WebSocketOptions
-            {
-                KeepAliveInterval = TimeSpan.FromSeconds(10),
-                ReceiveBufferSize = SocketServer.BUFFER_SIZE
-            });
-
-            app.UseMiddleware<WebSocketSocketMiddleware>();
+            app.UseExceptionHandler();
+            app.UseWebsocketsInternal(env);
         }
     }
 }

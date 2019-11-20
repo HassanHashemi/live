@@ -40,11 +40,31 @@ namespace Live.Hub
 
         public static bool operator ==(ClientInfo left, ClientInfo right)
         {
+            if (left is null && right is null)
+            {
+                return true;
+            }
+
+            if (left is null || right is null)
+            {
+                return false;
+            }
+
             return left.MerchantId == right.MerchantId && left.UserId == right.UserId;
         }
 
         public static bool operator !=(ClientInfo left, ClientInfo right)
         {
+            if (left is null && right is null)
+            {
+                return false;
+            }
+
+            if (left is null || right is null)
+            {
+                return true;
+            }
+
             return left.MerchantId != right.MerchantId || left.UserId != right.UserId;
         }
     }

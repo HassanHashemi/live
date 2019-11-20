@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net.WebSockets;
 using System.Text;
 
 namespace Live.Hub
@@ -10,6 +11,7 @@ namespace Live.Hub
         }
 
         public InternalWebsocketMessageType Type { get; set; }
+        public WebSocketCloseStatus? CloseStatus { get; set; }
         public object Data { get; set; }
 
         public byte[] ToBinary()
@@ -32,7 +34,8 @@ namespace Live.Hub
             return json;
         }
 
-        public static WebSocketMessage Close => new WebSocketMessage { Type = InternalWebsocketMessageType.Close };
+        public static WebSocketMessage Close(WebSocketCloseStatus status)
+            => new WebSocketMessage { Type = InternalWebsocketMessageType.Close, CloseStatus = status };
 
         public static WebSocketMessage Heartbeat()
         {
