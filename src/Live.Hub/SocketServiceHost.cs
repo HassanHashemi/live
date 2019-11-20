@@ -22,7 +22,7 @@ namespace Live.Hub
         public async Task StartAsync(CancellationToken cancellationToken)
         {
             _socketServer.ClientConnected += SocketServer_ClientConnected;
-            _socketServer.JsonReceived += SocketServer_JsonReceived;
+            _socketServer.TextReceived += SocketServer_TextReceived;
             _socketServer.ClientDisconnected += SocketServer_ClientDisconnected;
             _socketServer.ClientHeartBeat += SocketServer_ClientHeartBeat;
 
@@ -78,11 +78,11 @@ namespace Live.Hub
             }
         }
 
-        private async void SocketServer_JsonReceived(object sender, MessageReceivedArgs<string> e)
+        private async void SocketServer_TextReceived(object sender, MessageReceivedArgs<string> e)
         {
             foreach (var item in _socketServer.ConnectedClients)
             {
-                await _socketServer.SendJson(item.Key.UserId, new { msg = $"{e.Message} {e.Client.UserId}" });
+                await _socketServer.SendString(item.Key.UserId, $"{e.Message} {e.Client.UserId}");
             }
 
             _logger.LogInformation($"Received {e.Message} from {e.Client.UserId}");

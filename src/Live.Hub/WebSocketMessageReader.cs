@@ -52,7 +52,7 @@ namespace Live.Hub
 
             return result.MessageType switch
             {
-                WebSocketMessageType.Text => WebSocketMessage.Json(bytes),
+                WebSocketMessageType.Text => WebSocketMessage.Text(bytes),
                 WebSocketMessageType.Binary => WebSocketMessage.Binary(bytes),
                 _ => throw new InvalidOperationException("Invalid socket message type")
             };

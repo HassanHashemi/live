@@ -55,12 +55,12 @@ namespace Live.Hub
             };
         }
 
-        public static WebSocketMessage Json(byte[] data)
+        public static WebSocketMessage Text(byte[] data)
         {
             return new WebSocketMessage
             {
                 Data = Encoding.UTF8.GetString(data),
-                Type = InternalWebsocketMessageType.Json
+                Type = InternalWebsocketMessageType.Text
             };
         }
     }

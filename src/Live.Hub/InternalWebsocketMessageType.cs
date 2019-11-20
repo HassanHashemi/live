@@ -3,7 +3,7 @@
     public enum InternalWebsocketMessageType
     {
         Hearbeat = 1,
-        Json = 2,
+        Text = 2,
         Binary = 3,
         Close = 4
     }

@@ -20,7 +20,7 @@ namespace Live.Hub
             _logger = logger;
         }
 
-        public event EventHandler<MessageReceivedArgs<string>> JsonReceived;
+        public event EventHandler<MessageReceivedArgs<string>> TextReceived;
         public event EventHandler<MessageReceivedArgs<byte[]>> BinaryReceived;
         public event EventHandler<ClientConnectedEventArgs> ClientConnected;
         public event EventHandler<ClientDisconnectedEventArgs> ClientDisconnected;
@@ -70,7 +70,17 @@ namespace Live.Hub
             _logger.LogError(e.Exception.Message);
         }
 
-        public async Task SendJson(string userId, object message, CancellationToken cancellationToken = default)
+        public Task SendJson(string userId, object message, CancellationToken cancellationToken = default)
+        {
+            return SendString(userId, JsonSerializer.Serialize(message), cancellationToken);
+        }
+
+        public Task SendString(string userId, string message, CancellationToken cancellationToken = default)
+        {
+            return SendBytes(userId, Encoding.UTF8.GetBytes(message), WebSocketMessageType.Text, cancellationToken);
+        }
+
+        public async Task SendBytes(string userId, byte[] message, WebSocketMessageType type = WebSocketMessageType.Binary, CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrEmpty(userId))
             {
@@ -88,11 +98,10 @@ namespace Live.Hub
             }
 
             var sockets = this.ConnectedClients.GetConnections(userId);
-            var bytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message));
 
             foreach (var connection in sockets)
             {
-                await this.SendBytes(connection, bytes, WebSocketMessageType.Text, cancellationToken);
+                await this.SendBytes(connection, message, type, cancellationToken);
             }
         }
 
@@ -177,7 +186,7 @@ namespace Live.Hub
                     Message = message.ToBinary()
                 });
             }
-            else if (message.Type == InternalWebsocketMessageType.Json)
+            else if (message.Type == InternalWebsocketMessageType.Text)
             {
                 this.OnJsonReceived(new MessageReceivedArgs<string>
                 {
@@ -193,7 +202,7 @@ namespace Live.Hub
 
         protected virtual void OnJsonReceived(MessageReceivedArgs<string> e)
         {
-            var handler = this.JsonReceived;
+            var handler = this.TextReceived;
 
             handler?.Invoke(this, e);
         }
