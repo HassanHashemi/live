@@ -10,9 +10,9 @@ namespace Live.Hub
         {
         }
 
-        public InternalWebsocketMessageType Type { get; set; }
-        public WebSocketCloseStatus? CloseStatus { get; set; }
-        public object Data { get; set; }
+        public InternalWebsocketMessageType Type { get; private set; }
+        public WebSocketCloseStatus? CloseStatus { get; private set; }
+        public object Data { get; private set; }
 
         public byte[] ToBinary()
         {
@@ -34,34 +34,32 @@ namespace Live.Hub
             return json;
         }
 
-        public static WebSocketMessage Close(WebSocketCloseStatus status)
-            => new WebSocketMessage { Type = InternalWebsocketMessageType.Close, CloseStatus = status };
+        public static WebSocketMessage Close(WebSocketCloseStatus? status)
+            => new WebSocketMessage
+            {
+                Type = InternalWebsocketMessageType.Close,
+                CloseStatus = status
+            };
 
         public static WebSocketMessage Heartbeat()
-        {
-            return new WebSocketMessage
+            => new WebSocketMessage
             {
                 Data = null,
                 Type = InternalWebsocketMessageType.Hearbeat
             };
-        }
 
         public static WebSocketMessage Binary(byte[] data)
-        {
-            return new WebSocketMessage
+            => new WebSocketMessage
             {
                 Data = data,
                 Type = InternalWebsocketMessageType.Binary
             };
-        }
 
         public static WebSocketMessage Text(byte[] data)
-        {
-            return new WebSocketMessage
+            => new WebSocketMessage
             {
                 Data = Encoding.UTF8.GetString(data),
                 Type = InternalWebsocketMessageType.Text
             };
-        }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using Live.Backplane;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Threading;
@@ -6,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Live.Hub
 {
-    public class SocketServiceHost : Microsoft.Extensions.Hosting.IHostedService
+    public class SocketServiceHost : IHostedService
     {
         private readonly SocketServer _socketServer;
         private readonly IBackplaine _backplane;
@@ -48,9 +49,9 @@ namespace Live.Hub
             }
         }
 
-        public Task StopAsync(CancellationToken cancellationToken)
+        public async Task StopAsync(CancellationToken cancellationToken)
         {
-            return Task.CompletedTask;
+            await _socketServer.DisposeAsync();
         }
 
         private void SocketServer_ClientHeartBeat(object sender, HeartBeatEventArgs e)

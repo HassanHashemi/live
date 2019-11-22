@@ -7,10 +7,10 @@ namespace Live.Hub
     {
         public static void AddSocketServer(this IServiceCollection services)
         {
-            services.AddSingleton<IBackplaine, RedisBackplaine>();
-            services.AddHostedService<SocketServiceHost>();
             services.AddSingleton<SocketServer>();
+            services.AddHostedService<SocketServiceHost>();
             services.AddScoped<WebSocketSocketMiddleware>();
+            services.AddSingleton<IBackplaine, RedisBackplaine>();
         }
     }
 }

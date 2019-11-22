@@ -16,7 +16,10 @@ namespace Live.Hub
             WebHost.CreateDefaultBuilder<Startup>(args)
                 .ConfigureLogging((o, c) =>
                 {
-                    c.AddConsole();
+                    if (o.HostingEnvironment.IsDevelopment())
+                    {
+                        c.AddConsole();
+                    }
                 })
                 .ConfigureKestrel((o, c) =>
                 {

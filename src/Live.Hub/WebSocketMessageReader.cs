@@ -33,7 +33,7 @@ namespace Live.Hub
 
                 if (result.CloseStatus.HasValue)
                 {
-                    return WebSocketMessage.Close((WebSocketCloseStatus)result.CloseStatus);
+                    return WebSocketMessage.Close(result.CloseStatus);
                 }
 
                 stream.Write(buffer.Array, 0, result.Count);
@@ -44,18 +44,12 @@ namespace Live.Hub
         }
 
         private static WebSocketMessage ParseData(WebSocketReceiveResult result, byte[] bytes)
-        {
-            if (bytes.IsHeartbeat())
-            {
-                return WebSocketMessage.Heartbeat();
-            }
-
-            return result.MessageType switch
-            {
-                WebSocketMessageType.Text => WebSocketMessage.Text(bytes),
-                WebSocketMessageType.Binary => WebSocketMessage.Binary(bytes),
-                _ => throw new InvalidOperationException("Invalid socket message type")
-            };
-        }
+            => bytes.IsHeartbeat() ?
+                WebSocketMessage.Heartbeat() : result.MessageType switch
+                {
+                    WebSocketMessageType.Text => WebSocketMessage.Text(bytes),
+                    WebSocketMessageType.Binary => WebSocketMessage.Binary(bytes),
+                    _ => throw new InvalidOperationException("Invalid socket message type")
+                };
     }
 }

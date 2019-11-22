@@ -1,18 +1,15 @@
 ﻿using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
 using System.Threading.Tasks;
 
 namespace Live.Hub
 {
     public class WebSocketSocketMiddleware : IMiddleware
     {
-        private readonly SocketServer _socketCollection;
-        private readonly ILogger<WebSocketSocketMiddleware> _logger;
+        private readonly SocketServer _socketServer;
 
-        public WebSocketSocketMiddleware(SocketServer socketCollection, ILogger<WebSocketSocketMiddleware> logger)
+        public WebSocketSocketMiddleware(SocketServer socketCollection)
         {
-            this._socketCollection = socketCollection;
-            this._logger = logger;
+            this._socketServer = socketCollection;
         }
 
         public async Task InvokeAsync(HttpContext httpContext, RequestDelegate _)
@@ -45,7 +42,7 @@ namespace Live.Hub
             var socket = await httpContext.WebSockets.AcceptWebSocketAsync();
             var clientInfo = new ClientInfo(merchantId, userId);
 
-            await _socketCollection.Process(clientInfo, socket, httpContext.RequestAborted);
+            await _socketServer.Process(clientInfo, socket, httpContext.RequestAborted);
         }
     }
 }
