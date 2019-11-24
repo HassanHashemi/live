@@ -61,5 +61,10 @@ namespace Live.Hub
                 Data = Encoding.UTF8.GetString(data),
                 Type = InternalWebsocketMessageType.Text
             };
+
+        public bool IsEmpty
+            => (Type == InternalWebsocketMessageType.Text || Type == InternalWebsocketMessageType.Binary)
+                    &&
+               Data == null;
     }
 }

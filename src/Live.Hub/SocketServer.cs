@@ -183,6 +183,11 @@ namespace Live.Hub
                     break;
                 }
 
+                if (data.IsEmpty)
+                {
+                    continue;
+                }
+
                 this.RaiseMessageEvents(clientInfo, data);
             }
         }
@@ -246,7 +251,7 @@ namespace Live.Hub
             using var cts = new CancellationTokenSource();
             cts.CancelAfter(4000);
 
-            foreach (var socket in this.ConnectedClients.SelectMany(c => c.Value))
+            foreach (var socket in this.ConnectedClients.SelectMany(s => s.Value))
             {
                 try
                 {

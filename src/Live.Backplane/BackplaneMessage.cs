@@ -16,13 +16,9 @@ namespace Live.Backplane
                 throw new ArgumentException(nameof(merchantId));
             }
 
-            if (message == null)
-            {
-                throw new ArgumentNullException(nameof(message));
-            }
-
             this.UserId = userId;
-            this.Message = message;
+            this.MerchantId = merchantId;
+            this.Message = message ?? throw new ArgumentNullException(nameof(message));
         }
 
         public string MerchantId { get; set; }

@@ -3,6 +3,7 @@ using System.IO;
 using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
+using static Live.Hub.WebSocketMessage;
 
 namespace Live.Hub
 {
@@ -11,17 +12,11 @@ namespace Live.Hub
         public const int READ_TIME_OUT = 5000;
         public const int BUFFER_SIZE = 4 * 1024;
 
-        public static Task<WebSocketMessage> Read(WebSocket socket)
+        public static async Task<WebSocketMessage> Read(WebSocket socket)
         {
-            return ReadInternal(socket);
-        }
+            var buffer = WebSocket.CreateServerBuffer(BUFFER_SIZE);
 
-        private static async Task<WebSocketMessage> ReadInternal(WebSocket socket)
-        {
-            var buffer = WebSocket.CreateClientBuffer(BUFFER_SIZE, BUFFER_SIZE);
-
-            using var cts = new CancellationTokenSource();
-            cts.CancelAfter(READ_TIME_OUT);
+            using var cts = new CancellationTokenSource(READ_TIME_OUT);
 
             WebSocketReceiveResult result = null;
 
@@ -33,7 +28,7 @@ namespace Live.Hub
 
                 if (result.CloseStatus.HasValue)
                 {
-                    return WebSocketMessage.Close(result.CloseStatus);
+                    return Close(result.CloseStatus);
                 }
 
                 stream.Write(buffer.Array, 0, result.Count);
@@ -44,12 +39,11 @@ namespace Live.Hub
         }
 
         private static WebSocketMessage ParseData(WebSocketReceiveResult result, byte[] bytes)
-            => bytes.IsHeartbeat() ?
-                WebSocketMessage.Heartbeat() : result.MessageType switch
-                {
-                    WebSocketMessageType.Text => WebSocketMessage.Text(bytes),
-                    WebSocketMessageType.Binary => WebSocketMessage.Binary(bytes),
-                    _ => throw new InvalidOperationException("Invalid socket message type")
-                };
+            => bytes.IsHeartbeat() ? Heartbeat() : result.MessageType switch
+            {
+                WebSocketMessageType.Text => Text(bytes),
+                WebSocketMessageType.Binary => Binary(bytes),
+                _ => throw new InvalidOperationException("Invalid socket message type")
+            };
     }
 }

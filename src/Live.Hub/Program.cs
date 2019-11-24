@@ -14,22 +14,24 @@ namespace Live.Hub
 
         public static IWebHostBuilder CreateHostBuilder(string[] args) =>
             WebHost.CreateDefaultBuilder<Startup>(args)
-                .ConfigureLogging((o, c) =>
+                .ConfigureLogging((context, log) =>
                 {
-                    if (o.HostingEnvironment.IsDevelopment())
+                    log.ClearProviders();
+
+                    if (context.HostingEnvironment.IsDevelopment())
                     {
-                        c.AddConsole();
+                        log.AddConsole();
                     }
                 })
-                .ConfigureKestrel((o, c) =>
+                .ConfigureKestrel((context, kestrel) =>
                 {
-                    if (o.HostingEnvironment.IsDevelopment())
+                    if (context.HostingEnvironment.IsDevelopment())
                     {
-                        c.ListenLocalhost(5000);
+                        kestrel.ListenLocalhost(5000);
                     }
                     else
                     {
-                        c.ListenAnyIP(80);
+                        kestrel.ListenAnyIP(80);
                     }
                 });
     }
