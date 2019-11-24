@@ -20,7 +20,7 @@ namespace Live.Hub
             _logger = logger;
         }
 
-        public async Task StartAsync(CancellationToken cancellationToken)
+        public Task StartAsync(CancellationToken cancellationToken)
         {
             _socketServer.ClientConnected += SocketServer_ClientConnected;
             _socketServer.TextReceived += SocketServer_TextReceived;
@@ -29,7 +29,7 @@ namespace Live.Hub
 
             _backplane.MessageReceived += Backplane_MessageReceived;
 
-            await _backplane.Connect();
+            return Task.CompletedTask;
         }
 
         private async void Backplane_MessageReceived(object sender, BackplaneMessageReceivedArgs e)

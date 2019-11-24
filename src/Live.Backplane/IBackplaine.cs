@@ -6,8 +6,9 @@ namespace Live.Backplane
 {
     public interface IBackplaine
     {
-        Task Connect();
-        Task Publish(BackplaneMessage message, CancellationToken cancellationToken);
+        Task Publish(BackplaneMessage message, CancellationToken cancellationToken = default);
+        Task Init();
+
         event EventHandler<BackplaneMessageReceivedArgs> MessageReceived;
     }
 }
