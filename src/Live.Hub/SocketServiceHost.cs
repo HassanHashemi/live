@@ -20,7 +20,7 @@ namespace Live.Hub
             _logger = logger;
         }
 
-        public Task StartAsync(CancellationToken cancellationToken)
+        public async Task StartAsync(CancellationToken cancellationToken)
         {
             _socketServer.ClientConnected += SocketServer_ClientConnected;
             _socketServer.TextReceived += SocketServer_TextReceived;
@@ -29,11 +29,12 @@ namespace Live.Hub
 
             _backplane.MessageReceived += Backplane_MessageReceived;
 
-            return Task.CompletedTask;
+            await _backplane.Init();
         }
 
         private async void Backplane_MessageReceived(object sender, BackplaneMessageReceivedArgs e)
         {
+            _logger.LogInformation($"received from channel {e.Message.UserId} {e.Message.MerchantId}");
             try
             {
                 using var cts = new CancellationTokenSource();
@@ -56,7 +57,6 @@ namespace Live.Hub
 
         private void SocketServer_ClientHeartBeat(object sender, HeartBeatEventArgs e)
         {
-            _logger.LogInformation($"{e.Client.UserId} from {e.Client.MerchantId} Hearbeat");
         }
 
         private void SocketServer_ClientConnected(object sender, ClientConnectedEventArgs e)
@@ -86,7 +86,7 @@ namespace Live.Hub
                 await _socketServer.SendString(item.Key.UserId, $"{e.Message} {e.Client.UserId}");
             }
 
-            _logger.LogInformation($"Received {e.Message} from {e.Client.UserId}");
+            //_logger.LogInformation($"Received {e.Message} from {e.Client.UserId}");
         }
     }
 }

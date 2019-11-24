@@ -8,7 +8,7 @@ namespace Live.Backplane
 {
     public class RedisBackplaine : IBackplaine
     {
-        private readonly IConnectionMultiplexer _connectionMultiplexer;
+        private IConnectionMultiplexer _connectionMultiplexer;
         private ISubscriber _subscriber;
         public const string CHANNEL_NAME = "live";
 
@@ -34,12 +34,12 @@ namespace Live.Backplane
 
         public async Task Init()
         {
+            _connectionMultiplexer = await ConnectionMultiplexer.ConnectAsync("localhost");
             _subscriber = this._connectionMultiplexer.GetSubscriber();
 
-            var s = await _subscriber.SubscribeAsync(CHANNEL_NAME);
-            s.OnMessage(m =>
+            await _subscriber.SubscribeAsync(CHANNEL_NAME, (c, m) =>
             {
-                var message = JsonSerializer.Deserialize<BackplaneMessage>(m.Message);
+                var message = JsonSerializer.Deserialize<BackplaneMessage>(m);
 
                 MessageReceived?.Invoke(this, new BackplaneMessageReceivedArgs
                 {

@@ -4,6 +4,10 @@ namespace Live.Backplane
 {
     public class BackplaneMessage
     {
+        public BackplaneMessage()
+        {
+        }
+
         public BackplaneMessage(string userId, string merchantId, object message)
         {
             if (string.IsNullOrEmpty(userId))
@@ -22,7 +26,7 @@ namespace Live.Backplane
         }
 
         public string MerchantId { get; set; }
-        public string UserId { get; private set; }
-        public object Message { get; private set; }
+        public string UserId { get; set; }
+        public object Message { get; set; }
     }
 }
