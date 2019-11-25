@@ -1,6 +1,6 @@
-﻿using System.Threading.Tasks;
-using Live.Backplane;
+﻿using Live.Backplane;
 using Microsoft.AspNetCore.Http;
+using System.Threading.Tasks;
 
 namespace SamplePublisher
 {
@@ -17,7 +17,8 @@ namespace SamplePublisher
         {
             if (context.Request.Path.Value.Contains("push"))
             {
-                await redisBackplaine.Publish(new BackplaneMessage { MerchantId = "45", UserId = "xx", Message = new { Name = "Hassan!!" } });
+                var message = new BackplaneMessage("OrderCreated", "xx", "45", new { value = "Hassan Hashemi" });
+                await redisBackplaine.Publish(message);
             }
         }
     }

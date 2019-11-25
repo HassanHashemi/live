@@ -14,8 +14,7 @@ namespace Live.Backplane
             }
 
             services.AddSingleton<IBackplaine, RedisBackplaine>();
-            services.AddSingleton<IConnectionMultiplexer>(
-                o => ConnectionMultiplexer.Connect(config));
+            services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer.Connect(config));
         }
     }
 }
