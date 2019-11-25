@@ -1,4 +1,5 @@
-﻿using StackExchange.Redis;
+﻿using Microsoft.Extensions.Logging;
+using StackExchange.Redis;
 using System;
 using System.Text.Json;
 using System.Threading;
@@ -8,13 +9,21 @@ namespace Live.Backplane
 {
     public class RedisBackplaine : IBackplaine
     {
-        private IConnectionMultiplexer _connectionMultiplexer;
-        private ISubscriber _subscriber;
         public const string CHANNEL_NAME = "live";
 
-        public RedisBackplaine(IConnectionMultiplexer connectionMultiplexer)
+        private readonly IConnectionMultiplexer _connectionMultiplexer;
+        private readonly ILogger<RedisBackplaine> _logger;
+        private ISubscriber _subscriber;
+
+        public RedisBackplaine(IConnectionMultiplexer connectionMultiplexer, ILogger<RedisBackplaine> logger)
         {
-            this._connectionMultiplexer = connectionMultiplexer;
+            if (!_connectionMultiplexer.IsConnected)
+            {
+                throw new ArgumentException("ConnectionMultiplexer must be connected before using");
+            }
+
+            _connectionMultiplexer = connectionMultiplexer;
+            _logger = logger;
         }
 
         public event EventHandler<BackplaneMessageReceivedArgs> MessageReceived;
@@ -32,19 +41,32 @@ namespace Live.Backplane
             return db.PublishAsync(CHANNEL_NAME, json, CommandFlags.FireAndForget);
         }
 
-        public async Task Init()
+        public Task Init()
         {
-            _connectionMultiplexer = await ConnectionMultiplexer.ConnectAsync("localhost");
-            _subscriber = this._connectionMultiplexer.GetSubscriber();
+            _subscriber = _connectionMultiplexer.GetSubscriber();
 
-            await _subscriber.SubscribeAsync(CHANNEL_NAME, (c, m) =>
+            return _subscriber.SubscribeAsync(CHANNEL_NAME, HandleMessage);
+        }
+
+        private void HandleMessage(RedisChannel channel, RedisValue redisMessage)
+        {
+            if (channel != CHANNEL_NAME)
             {
-                var message = JsonSerializer.Deserialize<BackplaneMessage>(m);
+                _logger.LogWarning("Invalid channel name received");
+                return;
+            }
 
-                MessageReceived?.Invoke(this, new BackplaneMessageReceivedArgs
-                {
-                    Message = message
-                });
+            var message = JsonSerializer.Deserialize<BackplaneMessage>(redisMessage);
+
+            if (message == null)
+            {
+                _logger.LogError($"Error deserializing {redisMessage.ToString()}");
+                return;
+            }
+
+            MessageReceived?.Invoke(this, new BackplaneMessageReceivedArgs
+            {
+                Message = message
             });
         }
     }
