@@ -17,7 +17,7 @@ namespace Live.Backplane
 
         public RedisBackplaine(IConnectionMultiplexer connectionMultiplexer, ILogger<RedisBackplaine> logger)
         {
-            if (!_connectionMultiplexer.IsConnected)
+            if (!connectionMultiplexer.IsConnected)
             {
                 throw new ArgumentException("ConnectionMultiplexer must be connected before using");
             }
