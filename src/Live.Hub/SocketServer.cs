@@ -101,6 +101,46 @@ namespace Live.Hub
             return Send(sockets, message, type, cancellationToken);
         }
 
+        protected virtual void OnClientError(ErrorEventArgs e)
+        {
+            var handlers = ClientError;
+            handlers?.Invoke(this, e);
+
+            _logger.LogError(e.Exception.Message);
+        }
+
+        protected virtual void OnClientDisconnect(ClientDisconnectedEventArgs e)
+        {
+            var handlers = this.ClientDisconnected;
+            handlers?.Invoke(this, e);
+        }
+
+        protected virtual void OnClientConnected(ClientConnectedEventArgs e)
+        {
+            var handlers = this.ClientConnected;
+            handlers?.Invoke(this, e);
+        }
+
+        protected virtual void OnHeartBeat(HeartBeatEventArgs e)
+        {
+            var handlers = this.ClientHeartBeat;
+            handlers?.Invoke(this, e);
+        }
+
+        protected virtual void OnJsonReceived(MessageReceivedArgs<string> e)
+        {
+            var handler = this.TextReceived;
+
+            handler?.Invoke(this, e);
+        }
+
+        protected virtual void OnBinaryReceived(MessageReceivedArgs<byte[]> e)
+        {
+            var handler = this.BinaryReceived;
+
+            handler?.Invoke(this, e);
+        }
+
         private async Task Send(IEnumerable<WebSocket> sockets, byte[] message, WebSocketMessageType type, CancellationToken cancellationToken)
         {
             var tasks = new List<Task>();
@@ -120,14 +160,6 @@ namespace Live.Hub
             { }
 
             Task.WaitAll(tasks.ToArray());
-        }
-
-        protected virtual void OnClientError(ErrorEventArgs e)
-        {
-            var handlers = ClientError;
-            handlers?.Invoke(this, e);
-
-            _logger.LogError(e.Exception.Message);
         }
 
         private Task SendBytes(WebSocket socket, byte[] data, WebSocketMessageType type, CancellationToken cancellationToken)
@@ -151,18 +183,6 @@ namespace Live.Hub
 
             ConnectedClients.AddConnection(clientInfo, socket);
             LogConnection(clientInfo);
-        }
-
-        protected virtual void OnClientDisconnect(ClientDisconnectedEventArgs e)
-        {
-            var handlers = this.ClientDisconnected;
-            handlers?.Invoke(this, e);
-        }
-
-        protected virtual void OnClientConnected(ClientConnectedEventArgs e)
-        {
-            var handlers = this.ClientConnected;
-            handlers?.Invoke(this, e);
         }
 
         private async Task Read(ClientInfo clientInfo, WebSocket client, CancellationToken requestAborted)
@@ -192,12 +212,6 @@ namespace Live.Hub
             }
         }
 
-        protected virtual void OnHeartBeat(HeartBeatEventArgs e)
-        {
-            var handlers = this.ClientHeartBeat;
-            handlers?.Invoke(this, e);
-        }
-
         private void RaiseMessageEvents(ClientInfo client, WebSocketMessage message)
         {
             if (message.Type == InternalWebsocketMessageType.Binary)
@@ -220,20 +234,6 @@ namespace Live.Hub
             {
                 throw new InvalidOperationException("Invlaid message type");
             }
-        }
-
-        protected virtual void OnJsonReceived(MessageReceivedArgs<string> e)
-        {
-            var handler = this.TextReceived;
-
-            handler?.Invoke(this, e);
-        }
-
-        protected virtual void OnBinaryReceived(MessageReceivedArgs<byte[]> e)
-        {
-            var handler = this.BinaryReceived;
-
-            handler?.Invoke(this, e);
         }
 
         private void LogConnection(ClientInfo clientInfo)

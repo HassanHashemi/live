@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using StackExchange.Redis;
 using System;
 using System.Text.Json;
@@ -11,22 +12,25 @@ namespace Live.Backplane
     {
         public const string CHANNEL_NAME = "live";
 
-        private readonly IConnectionMultiplexer _connectionMultiplexer;
+        private readonly string _redisAddress;
         private readonly ILogger<RedisBackplaine> _logger;
-        private ISubscriber _subscriber;
 
-        public RedisBackplaine(IConnectionMultiplexer connectionMultiplexer, ILogger<RedisBackplaine> logger)
+        private ISubscriber _subscriber;
+        private IConnectionMultiplexer _connectionMultiplexer;
+
+        public RedisBackplaine(IOptions<RedisConfig> config, ILogger<RedisBackplaine> logger)
         {
-            if (!connectionMultiplexer.IsConnected)
+            if (string.IsNullOrEmpty(config.Value?.Address))
             {
-                throw new ArgumentException("ConnectionMultiplexer must be connected before using");
+                throw new ArgumentNullException("Invalid redis config");
             }
 
-            _connectionMultiplexer = connectionMultiplexer;
+            _redisAddress = config.Value.Address;
             _logger = logger;
         }
 
         public event EventHandler<BackplaneMessageReceivedArgs> MessageReceived;
+        private bool Initialized => _subscriber != null;
 
         public Task Publish(BackplaneMessage message, CancellationToken cancellationToken = default)
         {
@@ -41,11 +45,17 @@ namespace Live.Backplane
             return db.PublishAsync(CHANNEL_NAME, json, CommandFlags.FireAndForget);
         }
 
-        public Task Init()
+        public async Task Init()
         {
+            if (Initialized)
+            {
+                return;
+            }
+
+            _connectionMultiplexer = await ConnectionMultiplexer.ConnectAsync(_redisAddress);
             _subscriber = _connectionMultiplexer.GetSubscriber();
 
-            return _subscriber.SubscribeAsync(CHANNEL_NAME, HandleMessage);
+            await _subscriber.SubscribeAsync(CHANNEL_NAME, HandleMessage);
         }
 
         private void HandleMessage(RedisChannel channel, RedisValue redisMessage)

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
@@ -23,6 +24,10 @@ namespace Live.Hub
                         log.AddConsole();
                     }
                 })
+            .ConfigureAppConfiguration((o, c) =>
+            {
+                c.AddJsonFile("appsettings.Development.json", false);
+            })
                 .ConfigureKestrel((context, kestrel) =>
                 {
                     if (context.HostingEnvironment.IsDevelopment())
